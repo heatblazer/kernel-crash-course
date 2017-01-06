@@ -5,6 +5,8 @@
 #include <linux/fs.h>
 #include <asm/uaccess.h>
 
+#include <linux/mutex.h> /* lock the process via multuple users/terminals*/
+
 #define DEVICE_NAME "izchar"
 #define CLASS_NAME "iz"
 
@@ -13,6 +15,7 @@ MODULE_AUTHOR("ilian zapryanov");
 MODULE_DESCRIPTION("A simple char device test module.");
 MODULE_VERSION("0.1");
 
+static DEFINE_MUTEX(izchar_mutex);
 
 static int majorNumber;
 static char message[256] = {0};
@@ -37,6 +40,7 @@ static struct file_operations fops = {
 
 static int __init izchar_init(void)
 {
+	mutex_init(&izchar_mutex); /* init mutex */
 	printk(KERN_INFO "IZchar: Initailizing IZchar LKM\n");
 	majorNumber = register_chrdev(0, DEVICE_NAME, &fops);
 	if (majorNumber < 0) {
@@ -66,6 +70,7 @@ static int __init izchar_init(void)
 
 static void __exit izchar_exit(void)
 {
+	mutex_destroy(&izchar_mutex);
 	device_destroy(izClass, MKDEV(majorNumber, 0));
 	class_unregister(izClass);
 	class_destroy(izClass);
@@ -75,8 +80,13 @@ static void __exit izchar_exit(void)
 
 static int dev_open(struct inode* nodeptr, struct file* fptr)
 {
+	if (!mutex_trylock(&izchar_mutex)) {
+		printk(KERN_ALERT "IZChar: Device busy or used by another user!\n");
+		return -EBUSY;
+	} 
 	numberOpens++;
-	printk(KERN_INFO "IZChar: Device has been opened (%d) times!\n", numberOpens);
+	printk(KERN_INFO "IZChar: Device has been opened (%d) times!\n", 
+				numberOpens);	
 	return 0;
 }
 
@@ -104,6 +114,7 @@ static  ssize_t dev_write(struct file* fptr, const char* buffer, size_t len , lo
 
 static int dev_release(struct inode* nodeptr, struct file* fptr)
 {
+	mutex_unlock(&izchar_mutex);
 	printk(KERN_INFO "IZChar: Device closed!\n");
 	return 0;
 }
