@@ -1,0 +1,4 @@
+#Rules file for the char device I wrote
+#place this file in /etc/udev/rules.d/
+KERNEL=="izchar", SUBSYTEM="iz", MODE="0666"
+
