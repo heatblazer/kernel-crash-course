@@ -51,17 +51,17 @@ int main(int argc, char *argv[])
         access_type = tolower(argv[3][0]);
     }
 
-    if ((fd = open(filename, O_RDWR | O_SYNC)) == -1) PRINT_ERROR;
+    if ((fd = open(filename, O_RDWR)) == -1) PRINT_ERROR;
 
     printf("%s openede.\n", filename);
     printf("Target offset is 0x%x page size is %ld\n", (int)target, sysconf(_SC_PAGE_SIZE));
     fflush(stdout);
 
     /* map one page */
-    printf("mmap(%d, %ld, 0x%X, %d, 0x%X)\n", MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
+    printf("mmap(%d, %ld, 0x%X, %d, 0x%X)\n", MAP_SIZE, PROT_READ, MAP_PRIVATE,
            fd, (int)target);
 
-    map_base = mmap(NULL, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE,
+    map_base = mmap(NULL, MAP_SIZE, PROT_READ , MAP_PRIVATE,
                     fd, target & ~MAP_MASK);
 
     if (map_base == (void*)-1) PRINT_ERROR;
@@ -69,27 +69,35 @@ int main(int argc, char *argv[])
     printf("PCI memory mapped to address 0x%08lX.\n", (unsigned long)map_base);
     fflush(stdout);
 
-    virt_address = map_base + (target & MAP_MASK);
+    char c;
 
-    switch (access_type) {
-    case 'b':
-        read_result = *((uint8_t*)virt_address);
-        break;
-    case 'h':
-        read_result = *((uint16_t*)virt_address);
-        break;
-    case 'w':
-        read_result = *((uint32_t*)virt_address);
-        break;
-    default:
-        fprintf(stderr, "Illegal datatype '%c'.\n", access_type);
-        exit(2);
-        break;
+    while (/*(c = getchar()) != 'q'*/1) {
+        virt_address = map_base + (target & MAP_MASK);
+        if (target & MAP_SIZE) {
+            target = 0;
+            break;
+        } else {
+            target++;
+        }
+
+        switch (access_type) {
+        case 'b':
+            read_result = *((uint8_t*)virt_address);
+            break;
+        case 'h':
+            read_result = *((uint16_t*)virt_address);
+            break;
+        case 'w':
+            read_result = *((uint32_t*)virt_address);
+            break;
+        default:
+            fprintf(stderr, "Illegal datatype '%c'.\n", access_type);
+            exit(2);
+            break;
+        }
+        printf("Value at offset 0x%X (%p): 0x%X\n", (int)target, virt_address, read_result);
+        fflush(stdout);
     }
-
-    printf("Value at offset 0x%X (%p): 0x%X\n", (int)target, virt_address, read_result);
-    fflush(stdout);
-
 
     if (munmap(map_base, MAP_SIZE) == -1) {
         PRINT_ERROR;

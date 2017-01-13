@@ -1,0 +1,16 @@
+QMAKE_DEFAULT_INCDIRS = \
+    /usr/include/c++/4.8 \
+    /usr/include/c++/4.8/x86_64-suse-linux \
+    /usr/include/c++/4.8/backward \
+    /usr/lib64/gcc/x86_64-suse-linux/4.8/include \
+    /usr/local/include \
+    /usr/lib64/gcc/x86_64-suse-linux/4.8/include-fixed \
+    /usr/x86_64-suse-linux/include \
+    /usr/include
+QMAKE_DEFAULT_LIBDIRS = \
+    /usr/lib64/gcc/x86_64-suse-linux/4.8 \
+    /usr/lib64 \
+    /lib64 \
+    /usr/x86_64-suse-linux/lib \
+    /lib \
+    /usr/lib
