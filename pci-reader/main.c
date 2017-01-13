@@ -58,15 +58,15 @@ int main(int argc, char *argv[])
     fflush(stdout);
 
     /* map one page */
-    printf("mmap(%d, %ld, 0x%x, %d, 0x%x)\n", MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
+    printf("mmap(%d, %ld, 0x%X, %d, 0x%X)\n", MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
            fd, (int)target);
 
-    map_base = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED,
+    map_base = mmap(NULL, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE,
                     fd, target & ~MAP_MASK);
 
     if (map_base == (void*)-1) PRINT_ERROR;
 
-    printf("PCI memory mapped to address 0x%08lx.\n", (unsigned long)map_base);
+    printf("PCI memory mapped to address 0x%08lX.\n", (unsigned long)map_base);
     fflush(stdout);
 
     virt_address = map_base + (target & MAP_MASK);
